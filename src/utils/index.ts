@@ -7,6 +7,7 @@ export async function coordsToTile(coordinates: Coordinates, zoom: number): Prom
   const tile: Tile = { x: 0, y: 0, z: zoom, image: null };
   tile.y = latToTile(coordinates.latitude, zoom);
   tile.x = lonToTile(coordinates.longitude, zoom);
+  console.log(tile)
   return tile;
 }
 

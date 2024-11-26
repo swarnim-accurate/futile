@@ -11,7 +11,10 @@ export async function downloadTile(tile: Tile): Promise<void> {
 
   const response = await fetch(osmUrl);
 
-  if (!response.ok) throw new Error(`Failed to download tile: ${response.status}`);
+  if (!response.ok) {
+    console.log(response);
+    throw new Error(`Failed to download tile: ${response.status}`);
+  }
 
   const arrayBuffer = await response.arrayBuffer();
   tile.image = Buffer.from(arrayBuffer);
