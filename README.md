@@ -15,9 +15,9 @@ cd futile
 
 2. Install dependencies
 
-```shell
-npm i
-```
+    ```shell
+    npm i
+    ```
 
 3. Compile
 
