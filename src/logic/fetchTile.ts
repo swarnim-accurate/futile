@@ -1,15 +1,26 @@
 // src/logic/fetchTile.ts
-import { Tile } from "../types";
+import { Tile, MapKind } from "../types";
 import { osmServers } from "../config";
 
 // modify the object passed as reference
 // the downloaded tile is saved in the image attribute of the Tile struct
-export async function downloadTile(tile: Tile): Promise<void> {
+export async function downloadTile(ptrTile: Tile): Promise<void> {
+  // understand ptrTile as pointer to tile
+  // passed in here as a pointer so that modifications be done to it
   const randomIndex: number = Math.floor(Math.random() * osmServers.length);
   const random: string = osmServers[randomIndex];
-  const osmUrl = `https://${random}.tile.openstreetmap.org/${tile.z}/${tile.x}/${tile.y}.png`;
+  let tileUrl = ""
 
-  const response = await fetch(osmUrl);
+  if (ptrTile.mapKind === MapKind.openStreetMap) {
+    tileUrl = `https://${random}.tile.openstreetmap.org/${ptrTile.z}/${ptrTile.x}/${ptrTile.y}.png`;
+  } else if (ptrTile.mapKind === MapKind.primarMap) {
+    const primarApiKey = process.env.CELLSTILE_APIKEY;
+    tileUrl=`https://primar.ecc.no/primar/cellstile_apikey/${primarApiKey}/${ptrTile.z}/${ptrTile.x}/${ptrTile.y}.png`;
+  }  else {
+    throw new Error(`invalid map kind`);
+  }
+
+  const response = await fetch(tileUrl, { method: "GET" });
 
   if (!response.ok) {
     console.log(response);
@@ -17,7 +28,7 @@ export async function downloadTile(tile: Tile): Promise<void> {
   }
 
   const arrayBuffer = await response.arrayBuffer();
-  tile.image = Buffer.from(arrayBuffer);
+  ptrTile.image = Buffer.from(arrayBuffer); // the only modification done to the object
   return;
 }
 

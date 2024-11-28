@@ -1,79 +1,45 @@
 // src/index/fetchTileRoute.ts
 import { Router, Request, Response } from "express";
 import { existsSync, readFileSync } from 'fs';
-
-import { Tile } from "../types";
-import { downloadTile } from "../logic";
-import { saveTileToDisk } from "../utils";
-
+import { Tile, MapKind } from "../types";
 
 const router = Router();
 
+router.get('/tile/:mapKind/:z/:x/:y', async (req: Request, res: Response): Promise<void> => {
+  const mapKindStr: string = req.params.mapKind;
+  let mapKind: MapKind;
+  if (mapKindStr === MapKind.openStreetMap || mapKindStr === MapKind.primarMap) {
+    mapKind = mapKindStr as MapKind;
+  } else {
+    res.status(400).json({ error: "map kind invalid" });
+    return
+  }
+  const z = parseInt(req.params.z, 10);
+  const x = parseInt(req.params.x, 10);
+  const y = parseInt(req.params.y, 10);
+  const tile: Tile = { x, y, z, mapKind, image: null };
 
-router.get('/tile/:z/:x/:y', async (req: Request, res: Response) => {
-  const tile: Tile = { x: 0, y: 0, z: 0, image: null };
-  tile.z = parseInt(req.params.z);
-  tile.x = parseInt(req.params.x);
-  tile.y = parseInt(req.params.y);
-
-  const tilePath: string = `./tiles/${tile.z}/${tile.x}/${tile.y}.png`;
-  const tileExists: boolean = existsSync(tilePath);
+  const tilePath: string = `./tiles/${mapKind}/${tile.z}/${tile.x}/${tile.y}.png`;
 
   try {
-    if (!tileExists) {
+    if (!existsSync(tilePath)) {
       res.status(404).send(null);
-      return
+      return;
     } else {
       tile.image = readFileSync(tilePath);
-
       res.set({
         'Content-Type': 'image/png',
         'Cache-Control': 'public, max-age=86400',
         'Access-Control-Allow-Origin': '*'
       });
-
       res.status(200).send(tile.image);
+      return;
     }
-
   } catch (err) {
     console.error(`Error serving tile ${tile.z}/${tile.x}/${tile.y}:`, err);
     res.status(500).send('Error serving tile');
+    return;
   }
 });
-
-
-router.get('v1/tile/:z/:x/:y', async (req: Request, res: Response) => {
-  const tile: Tile = { x: 0, y: 0, z: 0, image: null };
-  tile.z = parseInt(req.params.z);
-  tile.x = parseInt(req.params.x);
-  tile.y = parseInt(req.params.y);
-
-  const tilePath: string = `./tiles/${tile.z}/${tile.x}/${tile.y}.png`;
-  const tileExists: boolean = existsSync(tilePath);
-
-
-  try {
-    if (!tileExists) {
-      await downloadTile(tile); // tile.image should contain the image buffer since objects are pass by reference
-      if (tile.image === null) throw new Error(`failed to download tile`);
-      await saveTileToDisk(tile); // save file for future use
-    } else {
-      tile.image = readFileSync(tilePath);
-    }
-
-    res.set({
-      'Content-Type': 'image/png',
-      'Cache-Control': 'public, max-age=86400',
-      'Access-Control-Allow-Origin': '*'
-    });
-
-    res.status(200).send(tile.image);
-
-  } catch (err) {
-    console.error(`Error serving tile ${tile.z}/${tile.x}/${tile.y}:`, err);
-    res.status(500).send('Error serving tile');
-  }
-});
-
 
 export default router;

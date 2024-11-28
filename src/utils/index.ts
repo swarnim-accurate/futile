@@ -1,10 +1,10 @@
 // src/utils/index.ts
-import { Tile, Coordinates } from "../types";
+import { Tile, Coordinates, MapKind } from "../types";
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 
 // See: https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames [Section: Lon./lat. to tile numbers]
-export async function coordsToTile(coordinates: Coordinates, zoom: number): Promise<Tile> {
-  const tile: Tile = { x: 0, y: 0, z: zoom, image: null };
+export async function coordsToTile(coordinates: Coordinates, zoom: number, mapKind: MapKind): Promise<Tile> {
+  const tile: Tile = { x: 0, y: 0, z: zoom, mapKind: mapKind, image: null };
   tile.y = latToTile(coordinates.latitude, zoom);
   tile.x = lonToTile(coordinates.longitude, zoom);
   console.log(tile)
@@ -25,9 +25,10 @@ export function isValidTile(tile: Tile): boolean {
 }
 
 export async function saveTileToDisk(tile: Tile): Promise<void> {
-  const tilePath = `./tiles/${tile.z}/${tile.x}/${tile.y}.png`;
+  const tileParentDir = `./tiles/${tile.mapKind}/${tile.z}/${tile.x}`
+  const tilePath = `${tileParentDir}/${tile.y}.png`;
   if (existsSync(tilePath)) return;
-  mkdirSync(`./tiles/${tile.z}/${tile.x}/`, { recursive: true });
+  mkdirSync(tileParentDir, { recursive: true });
   if (!tile.image) throw new Error(`no image data to be saved in buffer`);
   writeFileSync(tilePath, tile.image);
   return;

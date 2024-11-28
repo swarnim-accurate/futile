@@ -1,11 +1,13 @@
 // src/logic/fetchRegion.ts
-import { Tile, Coordinates } from "../types";
+import { Tile, Coordinates, MapKind } from "../types";
 import { downloadTile } from ".";
 import { coordsToTile, isValidTile, saveTileToDisk } from "../utils";
 
+// TODO: organize tiles by type of map; for instance, OpenStreetMap and Primar Map
 export async function downloadRegion(
   topLeft: Coordinates,
   bottomRight: Coordinates,
+  mapKind: MapKind,
   minZoom: number,
   maxZoom: number
 ): Promise<{ success: number, failure: number }> {
@@ -15,8 +17,8 @@ export async function downloadRegion(
   const CHUNK_DELAY = 5 * 1000; // milliseconds
 
   for (let zoom = minZoom; zoom <= maxZoom; ++zoom) {
-    const topLeftTile: Tile = await coordsToTile(topLeft, zoom);
-    const bottomRightTile: Tile = await coordsToTile(bottomRight, zoom)
+    const topLeftTile: Tile = await coordsToTile(topLeft, zoom, mapKind);
+    const bottomRightTile: Tile = await coordsToTile(bottomRight, zoom, mapKind)
 
     const { x: minX, y: minY } = topLeftTile;
     const { x: maxX, y: maxY } = bottomRightTile;
@@ -29,7 +31,7 @@ export async function downloadRegion(
     // Collect all valid tiles
     for (let x = minX; x <= maxX; ++x) {
       for (let y = minY; y <= maxY; ++y) {
-        const tile: Tile = { x, y, z: zoom, image: null };
+        const tile: Tile = { x, y, z: zoom, mapKind: mapKind, image: null };
         if (!isValidTile(tile)) continue;
         tiles.push(tile);
       }

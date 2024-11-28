@@ -1,7 +1,7 @@
 // src/index.ts
 
+import 'dotenv/config'
 import express, { Express } from "express";
-
 import { port } from "./config";
 import encompassedRouter from "./routes";
 import { corsMiddleware } from "./middleware";

@@ -5,9 +5,15 @@ export interface Coordinates {
   longitude: number
 }
 
+export enum MapKind {
+  openStreetMap = "openStreetMap",
+  primarMap = "primarMap",
+}
+
 export interface Tile {
   x: number,
   y: number,
   z: number,
-  image: Buffer | null
+  mapKind: MapKind,
+  image: Buffer | null,
 }
