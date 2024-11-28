@@ -9,15 +9,18 @@ export async function downloadTile(ptrTile: Tile): Promise<void> {
   // passed in here as a pointer so that modifications be done to it
   const randomIndex: number = Math.floor(Math.random() * osmServers.length);
   const random: string = osmServers[randomIndex];
-  let tileUrl = ""
+  let tileUrl: string;
 
-  if (ptrTile.mapKind === MapKind.openStreetMap) {
-    tileUrl = `https://${random}.tile.openstreetmap.org/${ptrTile.z}/${ptrTile.x}/${ptrTile.y}.png`;
-  } else if (ptrTile.mapKind === MapKind.primarMap) {
-    const primarApiKey = process.env.CELLSTILE_APIKEY;
-    tileUrl=`https://primar.ecc.no/primar/cellstile_apikey/${primarApiKey}/${ptrTile.z}/${ptrTile.x}/${ptrTile.y}.png`;
-  }  else {
-    throw new Error(`invalid map kind`);
+  switch (ptrTile.mapKind) {
+    case MapKind.openStreetMap:
+      tileUrl = `https://${random}.tile.openstreetmap.org/${ptrTile.z}/${ptrTile.x}/${ptrTile.y}.png`;
+      break;
+    case MapKind.primarMap:
+      const primarApiKey = process.env.CELLSTILE_APIKEY;
+      tileUrl = `https://primar.ecc.no/primar/cellstile_apikey/${primarApiKey}/${ptrTile.z}/${ptrTile.x}/${ptrTile.y}.png`;
+      break;
+    default:
+      throw new Error(`invalid map kind`);
   }
 
   const response = await fetch(tileUrl, { method: "GET" });

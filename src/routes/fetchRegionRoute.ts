@@ -34,8 +34,6 @@ router.post('/downloadRegion/', async (req: Request, res: Response) => {
 
     console.log(req.body);
 
-    res.set('Connection', 'Keep-Alive');
-    res.set('Keep-Alive', 'timeout=600');
     const { success, failure } = await downloadRegion(topLeft, bottomRight, mapKind, minZoom, maxZoom);
     res.status(200).send({ success, failure })
   } catch (err) {
