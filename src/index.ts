@@ -2,7 +2,6 @@
 
 import 'dotenv/config'
 import express, { Express } from "express";
-import { port } from "./config";
 import encompassedRouter from "./routes";
 import { corsMiddleware } from "./middleware";
 
@@ -16,6 +15,6 @@ app.use(corsMiddleware);
 // Routes
 app.use(encompassedRouter);
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+app.listen(process.env.PORT, () => {
+  console.log(`Server is running on http://localhost:${process.env.PORT}`);
 });
