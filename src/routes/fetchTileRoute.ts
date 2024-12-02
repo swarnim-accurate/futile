@@ -2,8 +2,16 @@
 import { Router, Request, Response } from "express";
 import { existsSync, readFileSync } from 'fs';
 import { Tile, MapKind } from "../types";
+import { downloadTile } from "../logic";
+import { saveTileToDisk } from "../utils";
 
 const router = Router();
+
+const isInternetAccessible = async (): Promise<boolean> => {
+  try { await fetch("https://google.com", { method: "HEAD" }) }
+  catch (err: any) { if (err.cause.code === 'ENOTFOUND') return false }
+  return true;
+};
 
 router.get('/tile/:mapKind/:z/:x/:y', async (req: Request, res: Response): Promise<void> => {
   const mapKindStr: string = req.params.mapKind;
@@ -22,21 +30,27 @@ router.get('/tile/:mapKind/:z/:x/:y', async (req: Request, res: Response): Promi
   const tilePath: string = `./tiles/${mapKind}/${tile.z}/${tile.x}/${tile.y}.png`;
 
   try {
-    if (!existsSync(tilePath)) {
-      res.status(404).send(null);
-      return;
-    } else {
+    // TODO: look into restricting cors header
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Access-Control-Allow-Origin', '*');
+    if (existsSync(tilePath)) {
       tile.image = readFileSync(tilePath);
-      res.set({
-        'Content-Type': 'image/png',
-        'Cache-Control': 'public, max-age=86400',
-        'Access-Control-Allow-Origin': '*'
-      });
       res.status(200).send(tile.image);
       return;
     }
+
+    // tile does not exist
+    if (!await isInternetAccessible()) {
+      res.status(404).send(null);
+    } else {
+      await downloadTile(tile);
+      res.status(200).send(tile.image);
+      await saveTileToDisk(tile);
+    }
+    return;
   } catch (err) {
-    console.error(`Error serving tile ${tile.z}/${tile.x}/${tile.y}:`, err);
+    console.error(`Error serving tile ${mapKind}/${tile.z}/${tile.x}/${tile.y}:`, err);
     res.status(500).send('Error serving tile');
     return;
   }

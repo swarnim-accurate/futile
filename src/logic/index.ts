@@ -1,2 +1,2 @@
-export { downloadTile, downloadTileWithRetry } from "./fetchTile";
+export { downloadTile } from "./fetchTile";
 export { downloadRegion } from "./fetchRegion";
